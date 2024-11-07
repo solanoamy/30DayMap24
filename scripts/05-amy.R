@@ -83,7 +83,7 @@ part2 <- data.frame(
 )
 
 
-ggplot() +
+journey <- ggplot() +
   annotation_map_tile("https://a.basemaps.cartocdn.com/dark_nolabels/${z}/${x}/${y}.png") +
   geom_sf(data = routemap, color = "slateblue4", linewidth = 1.8, alpha = 0.8) +
   geom_sf(data = socalcities, aes(fill = commute_stop), color = "grey20", lwd=0.1)+
@@ -107,4 +107,6 @@ ggplot() +
     legend.position = "none",
     plot.background = element_rect(fill = "black", color = NA)
   )
+journey
 
+ggsave("outputs/05-amy-journey.png", plot = journey, height = 5, width = 7,units = "in")
