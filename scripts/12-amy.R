@@ -7,13 +7,10 @@ library(dplyr)
 library(sf)
 library(glue)
 library(mapview)
-library(tmaptools)
 library(maptiles)
 library(basemaps)
 library(ggtext)
-library(tmap)
 library(prettymapr)
-library(RAQSAPI)
 library(gifski)
 library(png)
 library(systemfonts)
@@ -112,8 +109,8 @@ warehousemap <- ggplot() +
     plot.margin=unit(c(-70,0,-40,0), "pt"))
   
 
-animate(warehousemap, height = 4, width=4.8, units= "in", res=160)
-anim_save("12-amy.gif")
+animate(warehousemap, height = 4, width=4.8, units= "in", res=200)
+anim_save("12-timespace-amy.gif", path="outputs")
 
 
 
