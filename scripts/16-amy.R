@@ -22,7 +22,8 @@ popchars <- st_read("https://services.arcgis.com/hVnyNvwbpFFPDV5j/arcgis/rest/se
 popchars <- popchars %>% 
   filter(County %in% c("Riverside", "San Bernardino")) %>%
   st_make_valid()
-  
+
+#read in cities data to create map boundary  
 socalcities <- st_read("https://maps.scag.ca.gov/scaggis/rest/services/OpenData/City_Boundaries/MapServer/0/query?outFields=*&where=1%3D1&f=geojson")
 
 mapcities <- c("Beaumont","Calimesa","Corona","Eastvale","Jurupa Valley", 
@@ -31,6 +32,7 @@ mapcities <- c("Beaumont","Calimesa","Corona","Eastvale","Jurupa Valley",
                "Fontana","Grand Terrace","Highland","Loma Linda","Montclair",
                "Ontario","Rancho Cucamonga","Redlands", "Claremont","Pomona")
 
+#create approximate boundary for urban areas in IE, will use for spatial filter later
 IEcities <- socalcities %>%
   dplyr::select(-created_user,-created_date,-last_edited_date,-last_edited_user, -YEAR) %>%
   dplyr::filter(CITY %in% mapcities | OBJECTID ==168)
@@ -41,19 +43,20 @@ biggercitieslist <- c("Banning","Beaumont","Calimesa","Corona","Eastvale","Jurup
                       "Fontana","Grand Terrace","Highland","Loma Linda","Montclair","Baldwin Park",
                       "Ontario","Rancho Cucamonga","Redlands", "Claremont","Pomona", "Diamond Bar", "San Dimas")
 
+#boundary for map area
 mapcities <- socalcities %>%
   dplyr::filter(CITY %in% biggercitieslist)
 
-
+#create boundary to filter communities
 boundary <- sfheaders::sf_remove_holes(st_union(IEcities))
 boundary_poly <- st_cast(boundary, "POLYGON", do_split = FALSE)
 IEboundary <- st_sf(boundary_poly)
 
-#remove certain communities
+#carry out filter
 filtered_socal <- st_filter(popchars, IEboundary) %>%
   filter(FID %notin% c(2846,4147,3777,2749,2877,3772,3709, 4157) & TotPop19 > 0)
 
-
+#read in disadvantaged communities from day12 map
 disadvantaged <- st_read("https://maps.scag.ca.gov/scaggis/rest/services/OpenData/DisadvantagedCommunities/MapServer/0/query?outFields=*&where=1%3D1&f=geojson")
 
 
@@ -64,14 +67,14 @@ objIDs_disadvantage <- c(1580, 239,272,225,284, 1579, 1581, 1593, 1592,388, 144,
 disadvantage <- disadvantaged %>%
   dplyr::filter(County %in% c("Riverside", "San Bernardino") & OBJECTID %notin% objIDs_disadvantage)
 
-
+#did not need to filter so much, but a non-filtered characteristics layer to create a yellow filter on the map later
 allchars <- st_read("https://services.arcgis.com/hVnyNvwbpFFPDV5j/arcgis/rest/services/CES_Test/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
 allchars <- allchars %>% st_make_valid() %>%
   filter(County %in% c("Riverside","San Bernardino","Los Angeles", "Santa Barbara",
                        "Orange", "Ventura", "San Diego","Imperial"))
 
 
-
+#make map
 map <- tm_basemap("CartoDB.PositronNoLabels") +  
   tm_shape(mapcities) +
   tm_polygons(fill = NA, col = NA) +
@@ -93,7 +96,7 @@ map <- tm_basemap("CartoDB.PositronNoLabels") +
   tm_credits("Amy Solano  \n30 Day Map Challenge, Day 16  \nSources: City Boundaries, SCAG; \nCalEnviroScreen 4.0 \n", position=c("left", "bottom"), 
              size=0.5, color="grey40")
 
-# grid.text because tmap wont let me bold my title
+# grid.text because tmap wont let me bold my title, save output
 png("outputs/16-amy.png", width = 6, height = 4, units = "in", res = 300)
 
 print(map)
